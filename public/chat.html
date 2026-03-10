@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Peekr — Chat</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23c8f5e8'/><text y='.9em' font-size='80' x='10'>👀</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app" id="app">
+
+    <header class="header">
+      <div class="header__brand">
+        <a class="header__logo" href="/">Peekr</a>
+        <div class="header__dot" id="statusDot"></div>
+        <div class="header__status" id="statusText">connecting…</div>
+      </div>
+      <div class="header__timer" id="clock">00:00</div>
+      <div class="header__actions">
+        <button class="btn-icon" id="btnChatToggle" aria-label="Toggle chat">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="stage">
+
+      <section class="videos" aria-label="Video feeds">
+
+        <div class="vid-card vid-card--stranger">
+          <div class="vid-card__inner">
+            <video id="remoteVideo" autoplay playsinline></video>
+            <div class="vid-card__lines" aria-hidden="true"></div>
+            <div class="vid-empty" id="remotePlaceholder">
+              <div class="vid-empty__avatar">👤</div>
+              <p class="vid-empty__label" id="placeholderLabel">Finding someone…</p>
+              <div class="vid-empty__dots"><span></span><span></span><span></span></div>
+            </div>
+          </div>
+          <div class="vid-card__tag">stranger</div>
+        </div>
+
+        <div class="vid-card vid-card--self">
+          <div class="vid-card__inner">
+            <video id="localVideo" autoplay playsinline muted></video>
+            <div class="vid-card__lines" aria-hidden="true"></div>
+            <div class="vid-empty" id="selfPlaceholder" style="display:none">
+              <div class="vid-empty__avatar">🙈</div>
+              <p class="vid-empty__label">Camera off</p>
+            </div>
+          </div>
+          <div class="vid-card__tag">you</div>
+        </div>
+
+      </section>
+
+      <div class="controls" role="toolbar">
+
+        <button class="ctrl ctrl--cam" id="btnCam" aria-label="Toggle camera">
+          <svg id="iconCamOn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.723v6.554a1 1 0 0 1-1.447.894L15 14M4 8h11a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2Z"/>
+          </svg>
+          <svg id="iconCamOff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" style="display:none">
+            <path d="M15 10l4.553-2.276A1 1 0 0 1 21 8.723v6.554a1 1 0 0 1-1.447.894L15 14M4 8h11a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2Z"/>
+            <line x1="3" y1="3" x2="21" y2="21" stroke-width="2.2"/>
+          </svg>
+          <span>cam</span>
+        </button>
+
+        <button class="ctrl ctrl--next" id="btnNext" aria-label="Next stranger">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
+          <span>next</span>
+        </button>
+
+        <button class="ctrl ctrl--stop" id="btnLeave" aria-label="Leave">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
+          </svg>
+          <span>leave</span>
+        </button>
+
+      </div>
+
+      <aside class="chat closed" id="chatPanel">
+        <div class="chat__header">
+          <span class="chat__title">chat</span>
+          <button class="btn-icon btn-icon--sm" id="btnChatClose" aria-label="Close chat">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="chat__messages" id="chatMessages" aria-live="polite"></div>
+        <div class="chat__typing" id="typingIndicator">
+          <div class="chat__typing-bubble">
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+            <span class="typing-dot"></span>
+          </div>
+        </div>
+        <div class="chat__footer">
+          <input type="text" id="chatInput" class="chat__input" placeholder="type a message…" maxlength="500" autocomplete="off" disabled />
+          <button class="chat__send" id="btnSend" disabled>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7Z"/>
+            </svg>
+          </button>
+        </div>
+      </aside>
+
+    </main>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="client.js?v=5"></script>
+</body>
+</html>
