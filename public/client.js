@@ -160,7 +160,7 @@ btnCam?.addEventListener('click', toggleCam);
 
 // ─── Socket ───────────────────────────────────────────────────────────────────
 function connectSocket() {
-  socket = io({ transports: ['websocket', 'polling'] });
+  socket = io('https://peekr-production-c72b.up.railway.app', { transports: ['websocket', 'polling'] });
 
   socket.on('connect',    () => { setStatus('online'); findPartner(); });
   socket.on('disconnect', () => { setStatus('offline'); teardown(false); stopClock(); });
