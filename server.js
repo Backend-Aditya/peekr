@@ -21,7 +21,7 @@ const path = require("path");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "*" },
+  cors: { origin: "https://peekr-production-c72b.up.railway.app/*" },
   transports: ["polling", "websocket"], // polling first → reliable through proxies
   pingTimeout: 20000,
   pingInterval: 10000,
