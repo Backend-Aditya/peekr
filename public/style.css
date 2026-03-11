@@ -827,7 +827,7 @@ body {
 .typing-dot {
   width: 6px;
   height: 6px;
-  border-radius: var(--radius-sm) var(--radius-sm) 3px var(--radius-sm);
+  border-radius: 50%;
   background: var(--ink-2);
   animation: typing-bounce 1.2s ease-in-out infinite;
   flex-shrink: 0;
