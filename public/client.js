@@ -112,7 +112,6 @@ function toggleChat(force) {
   chatPanel?.classList.remove('closed');
   chatPanel?.classList.toggle('open', chatOpen);
   btnChatToggle?.classList.toggle('chat-open', chatOpen);
-  if (chatOpen) clearBadge(); // clear on open
 }
 btnChatToggle?.addEventListener('click', () => toggleChat());
 btnChatClose?.addEventListener('click',  () => toggleChat(false));
