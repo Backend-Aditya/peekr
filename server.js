@@ -21,7 +21,7 @@ const path = require("path");
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
-  cors: { origin: "https://peekr-production-c72b.up.railway.app/*" },
+  cors: { origin: "*" },
   transports: ["polling", "websocket"], // polling first → reliable through proxies
   pingTimeout: 20000,
   pingInterval: 10000,
@@ -31,6 +31,36 @@ app.use(express.static(path.join(__dirname, "public")));
 app.get("/chat", (_req, res) =>
   res.sendFile(path.join(__dirname, "public", "chat.html")),
 );
+
+// ─── TURN credentials endpoint ────────────────────────────────────────────────
+// Returns ICE config to the client. Swap in real TURN credentials here
+// when you have them (Metered, Twilio, Cloudflare etc.)
+// For now serves reliable STUN-only config — works for most networks.
+// On strict NAT / macOS: sign up free at https://metered.ca and add TURN creds.
+app.get("/ice-config", (_req, res) => {
+  const iceServers = [
+    { urls: "stun:stun.l.google.com:19302" },
+    { urls: "stun:stun.cloudflare.com:3478" },
+  ];
+
+  // If TURN credentials are configured via env vars, add them
+  if (process.env.TURN_HOST && process.env.TURN_USER && process.env.TURN_PASS) {
+    iceServers.push(
+      {
+        urls: `turn:${process.env.TURN_HOST}:3478`,
+        username: process.env.TURN_USER,
+        credential: process.env.TURN_PASS,
+      },
+      {
+        urls: `turns:${process.env.TURN_HOST}:5349`,
+        username: process.env.TURN_USER,
+        credential: process.env.TURN_PASS,
+      },
+    );
+  }
+
+  res.json({ iceServers, iceCandidatePoolSize: 4 });
+});
 
 // ─── Tuning ───────────────────────────────────────────────────────────────────
 const MATCH_WINDOW = 2000; // ms to hold a user in the pending pool before promoting

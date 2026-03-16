@@ -1,37 +1,23 @@
 'use strict';
 
-// ─── ICE / TURN config ────────────────────────────────────────────────────────
-// STUN: discovers public IP, works on most networks
-// TURN: relays media when direct P2P fails (macOS firewall, strict NAT, etc.)
-// Using Open Relay by Metered — free, no account needed
-const ICE_CONFIG = {
-  iceServers: [
-    // STUN — Google public servers
-    { urls: 'stun:stun.l.google.com:19302' },
-    { urls: 'stun:stun1.l.google.com:19302' },
-
-    // TURN over UDP (fastest relay)
-    {
-      urls:       'turn:openrelay.metered.ca:80',
-      username:   'openrelayproject',
-      credential: 'openrelayproject',
-    },
-    // TURN over TCP (fallback when UDP is blocked)
-    {
-      urls:       'turn:openrelay.metered.ca:443',
-      username:   'openrelayproject',
-      credential: 'openrelayproject',
-    },
-    // TURN over TLS/TCP (last resort — works through almost any firewall)
-    {
-      urls:       'turns:openrelay.metered.ca:443',
-      username:   'openrelayproject',
-      credential: 'openrelayproject',
-    },
-  ],
-  // Prefer UDP candidates first, fall back to TCP/relay
-  iceCandidatePoolSize: 10,
+// ─── ICE config — fetched from server ────────────────────────────────────────
+// Server returns STUN always + TURN only when env vars are configured.
+// To enable TURN: set TURN_HOST, TURN_USER, TURN_PASS on your server.
+// Free TURN: sign up at https://metered.ca → copy host/user/pass to env vars.
+let ICE_CONFIG = {
+  iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+  iceCandidatePoolSize: 4,
 };
+
+async function loadIceConfig() {
+  try {
+    const res = await fetch('/ice-config');
+    if (res.ok) ICE_CONFIG = await res.json();
+    console.log('ICE servers:', ICE_CONFIG.iceServers.map(s => s.urls).flat());
+  } catch (e) {
+    console.warn('Could not load ICE config, using default STUN only');
+  }
+}
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
 const remoteVideo       = document.getElementById('remoteVideo');
@@ -363,6 +349,7 @@ btnLeave?.addEventListener('click', () => {
 
 // ─── Init — runs immediately when page loads ──────────────────────────────────
 (async () => {
+  await loadIceConfig();
   await initMedia();
   connectSocket();
 })();
