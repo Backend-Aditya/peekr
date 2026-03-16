@@ -1,12 +1,36 @@
 'use strict';
 
+// ─── ICE / TURN config ────────────────────────────────────────────────────────
+// STUN: discovers public IP, works on most networks
+// TURN: relays media when direct P2P fails (macOS firewall, strict NAT, etc.)
+// Using Open Relay by Metered — free, no account needed
 const ICE_CONFIG = {
   iceServers: [
+    // STUN — Google public servers
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun1.l.google.com:19302' },
-    { urls: 'stun:stun2.l.google.com:19302' },
-    { urls: 'stun:stun3.l.google.com:19302' },
-  ]
+
+    // TURN over UDP (fastest relay)
+    {
+      urls:       'turn:openrelay.metered.ca:80',
+      username:   'openrelayproject',
+      credential: 'openrelayproject',
+    },
+    // TURN over TCP (fallback when UDP is blocked)
+    {
+      urls:       'turn:openrelay.metered.ca:443',
+      username:   'openrelayproject',
+      credential: 'openrelayproject',
+    },
+    // TURN over TLS/TCP (last resort — works through almost any firewall)
+    {
+      urls:       'turns:openrelay.metered.ca:443',
+      username:   'openrelayproject',
+      credential: 'openrelayproject',
+    },
+  ],
+  // Prefer UDP candidates first, fall back to TCP/relay
+  iceCandidatePoolSize: 10,
 };
 
 // ─── DOM ──────────────────────────────────────────────────────────────────────
@@ -112,6 +136,7 @@ function toggleChat(force) {
   chatPanel?.classList.remove('closed');
   chatPanel?.classList.toggle('open', chatOpen);
   btnChatToggle?.classList.toggle('chat-open', chatOpen);
+  if (chatOpen) clearBadge(); // clear on open
 }
 btnChatToggle?.addEventListener('click', () => toggleChat());
 btnChatClose?.addEventListener('click',  () => toggleChat(false));
@@ -225,14 +250,20 @@ function createPeerConnection() {
 
   peerConn.oniceconnectionstatechange = () => {
     const s = peerConn?.iceConnectionState;
-    if (s === 'failed') peerConn.restartIce();
+    console.log('ICE state:', s);
+    if (s === 'failed') {
+      console.warn('ICE failed — attempting restart');
+      peerConn.restartIce();
+    }
     if (s === 'disconnected') {
+      // TURN relay can take longer to reconnect — give it 5s before giving up
       setTimeout(() => {
         if (peerConn?.iceConnectionState === 'disconnected') {
+          console.warn('ICE disconnected — tearing down');
           teardown(false); stopClock(); enableChat(false);
           setStatus('online'); showPlaceholder('Connection lost — hit Next 👋');
         }
-      }, 3000);
+      }, 5000);
     }
   };
 
